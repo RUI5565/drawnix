@@ -6,11 +6,16 @@ WORKDIR /app
 
 # 复制依赖文件并安装依赖
 COPY package*.json ./
+COPY nx.json .
+COPY tsconfig.base.json .
+COPY lerna.json* . 2>/dev/null || true
+COPY .npmrc* . 2>/dev/null || true
+
 RUN npm install
 
 # 复制剩余代码并构建
 COPY . .
-RUN npm run build
+RUN npm run build:web
 
 
 # ---------- 运行阶段 ----------
@@ -30,8 +35,8 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
-# 复制构建产物
-COPY --from=build /app/dist /usr/share/nginx/html
+# 复制构建产物 (Nx 输出目录)
+COPY --from=build /app/dist/apps/web /usr/share/nginx/html
 
 # 暴露 Hugging Face 要求的 7860 端口
 EXPOSE 7860
